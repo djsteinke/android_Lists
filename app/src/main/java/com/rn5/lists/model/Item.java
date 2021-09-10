@@ -2,9 +2,11 @@ package com.rn5.lists.model;
 
 import lombok.Getter;
 import lombok.Setter;
+import lombok.ToString;
 
 @Getter
 @Setter
+@ToString
 public class Item {
 
     private final int id;

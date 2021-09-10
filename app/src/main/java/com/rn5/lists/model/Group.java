@@ -4,9 +4,11 @@ import java.util.ArrayList;
 
 import lombok.Getter;
 import lombok.Setter;
+import lombok.ToString;
 
 @Getter
 @Setter
+@ToString
 public class Group {
 
     private String name;
@@ -17,16 +19,17 @@ public class Group {
         this.name = name;
     }
 
-    public void add(Item item) {
+    public int add(Item item) {
         int j = 0;
         for (Item i : items) {
             if (i.equals(item)) {
                 items.set(j, item);
-                return;
+                return j;
             }
             j++;
         }
         items.add(item);
+        return j;
     }
 
     public void remove(Item item) {

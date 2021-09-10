@@ -5,6 +5,7 @@ import android.os.Bundle;
 
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.google.android.material.snackbar.Snackbar;
+import com.rn5.lists.model.Group;
 import com.rn5.lists.model.Lists;
 
 import androidx.appcompat.app.AppCompatActivity;
@@ -19,6 +20,7 @@ import android.view.Menu;
 import android.view.MenuItem;
 
 import java.io.File;
+import java.util.ArrayList;
 
 public class MainActivity extends AppCompatActivity implements ChangeListener {
 
@@ -28,6 +30,7 @@ public class MainActivity extends AppCompatActivity implements ChangeListener {
     private Vibrator vibrator;
     private RecyclerView groupRecycler;
     public static LoadListener loadListener;
+    private ArrayList<Group> groups;
 
     public static int black;
     public static int gray;
@@ -44,18 +47,21 @@ public class MainActivity extends AppCompatActivity implements ChangeListener {
 
         FloatingActionButton fab = findViewById(R.id.fab);
         fab.setOnClickListener(view -> {
+            /*
             Snackbar.make(view, "Replace with your own action", Snackbar.LENGTH_SHORT)
                     .setAction("Action", null).show();
+
+             */
             Alert alert = new Alert(this, this).forGroup(null);
             alert.show();
         });
 
         vibrator = (Vibrator) getSystemService(Context.VIBRATOR_SERVICE);
         filePathApp = this.getExternalFilesDir("Lists");
-        loadListener = this::addAdapter;
         // specify an adapter (see also next example)
 
         lists = Lists.load();
+        groups = lists.getGroups();
 
         gray = getResources().getColor(R.color.gray);
         white = getResources().getColor(R.color.white);
@@ -64,12 +70,7 @@ public class MainActivity extends AppCompatActivity implements ChangeListener {
         groupRecycler = findViewById(R.id.recyclerView);
         groupRecycler.setHasFixedSize(true);
         groupRecycler.setLayoutManager(new LinearLayoutManager(this));
-        groupAdapter = new GroupAdapter(this, this, lists.getGroups());
-        groupRecycler.setAdapter(groupAdapter);
-    }
-
-    private void addAdapter() {
-        groupAdapter = new GroupAdapter(this, this, lists.getGroups());
+        groupAdapter = new GroupAdapter(this, this, groups);
         groupRecycler.setAdapter(groupAdapter);
     }
 
@@ -84,12 +85,18 @@ public class MainActivity extends AppCompatActivity implements ChangeListener {
     }
 
     @Override
-    public void onAdd(ListType listType) {
+    public void onAdd(ListType listType, int pos) {
+        Log.d(TAG, "onAdd()" + listType);
         switch (listType) {
             case ITEM:
                 break;
             case GROUP:
-                groupAdapter.notifyDataSetChanged();
+                boolean insert = (groups.size() == ++pos);
+                Log.d(TAG, "onAdd()" + groups + " pos[" + pos + "]");
+                if (insert)
+                    groupAdapter.notifyItemInserted(--pos);
+                else
+                    groupAdapter.notifyItemChanged(pos);
                 break;
             default:
                 break;

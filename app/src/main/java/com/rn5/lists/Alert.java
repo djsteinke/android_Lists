@@ -71,6 +71,7 @@ public class Alert {
         builder.setView(view)
                 .setPositiveButton(R.string.save, (dialog, id) -> {
                     String t = editTitle.getText().toString();
+                    int pos = -1;
                     if (t != null && !t.isEmpty())
                     switch (listType) {
                         case ITEM:
@@ -78,21 +79,24 @@ public class Alert {
                             if (item != null) {
                                 item.setTitle(t);
                                 item.setDescription(d);
-                                lists.add(item);
+                                pos = lists.add(item, group.getName());
                             } else
-                                lists.add(new Item().withTitle(t).withDescription(d));
+                                pos = lists.add(new Item().withTitle(t).withDescription(d), group.getName());
                             break;
                         case GROUP:
                             if (group != null) {
                                 group.setName(t);
-                                lists.add(group);
+                                pos = lists.add(group);
                             } else
-                                lists.add(new Group(t));
+                                pos = lists.add(new Group(t));
                             break;
                         default:
                             break;
                     }
-                    listener.onAdd(listType);
+                    if (pos != -1) {
+                        listener.onAdd(listType, pos);
+                        lists.save();
+                    }
                     listener.onTick();
                 })
                 .setNegativeButton(R.string.cancel, (dialog, id) -> {

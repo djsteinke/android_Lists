@@ -24,30 +24,30 @@ public class Lists {
 
     public Lists() { }
 
-    public void add(Group group) {
+    public int add(Group group) {
         int j = 0;
         for (Group g : groups) {
             if (g.equals(group)) {
                 groups.set(j, group);
-                return;
+                return j;
             }
             j++;
         }
         groups.add(group);
+        return j;
     }
 
     public void remove(Group group) {
         groups.remove(group);
     }
 
-    public void add(Item item) {
-        String groupName = getItemGroup(item);
+    public int add(Item item, String groupName) {
         for (Group g : groups) {
             if (g.getName().equals(groupName)) {
-                g.add(item);
-                return;
+                return g.add(item);
             }
         }
+        return -1;
     }
 
     public String getItemGroup(Item item) {
@@ -73,7 +73,11 @@ public class Lists {
         }
     }
 
-    public void save() throws IOException {
-        saveToFile(fileName, toJson(this));
+    public void save() {
+        try {
+            saveToFile(fileName, toJson(this));
+        } catch (IOException e) {
+            Log.e(TAG, "save() failed. Error: " + e.getMessage());
+        }
     }
 }
