@@ -41,6 +41,18 @@ public class Lists {
         groups.remove(group);
     }
 
+    public void expand(Group group) {
+        int j = 0;
+        for (Group g : groups) {
+            if (g.equals(group)) {
+                groups.get(j).expanded();
+                save();
+                return;
+            }
+            j++;
+        }
+    }
+
     public int add(Item item, String groupName) {
         for (Group g : groups) {
             if (g.getName().equals(groupName)) {
@@ -48,6 +60,18 @@ public class Lists {
             }
         }
         return -1;
+    }
+
+    public void check(String groupName, int pos) {
+        Log.d(TAG, "Group[" + groupName + "]" + " Pos[" + pos + "]");
+        for (Group g : groups) {
+            if (g.getName().equals(groupName)) {
+                boolean isChecked = g.getItems().get(pos).isChecked();
+                g.getItems().get(pos).isChecked(!isChecked);
+                save();
+                return;
+            }
+        }
     }
 
     public String getItemGroup(Item item) {

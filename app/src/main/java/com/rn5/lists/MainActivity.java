@@ -4,7 +4,6 @@ import android.content.Context;
 import android.os.Bundle;
 
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
-import com.google.android.material.snackbar.Snackbar;
 import com.rn5.lists.model.Group;
 import com.rn5.lists.model.Lists;
 
@@ -85,16 +84,15 @@ public class MainActivity extends AppCompatActivity implements ChangeListener {
     }
 
     @Override
-    public void onAdd(ListType listType, int pos) {
+    public void onAdd(ListType listType, int pos, boolean insert) {
         Log.d(TAG, "onAdd()" + listType);
         switch (listType) {
             case ITEM:
                 break;
             case GROUP:
-                boolean insert = (groups.size() == ++pos);
                 Log.d(TAG, "onAdd()" + groups + " pos[" + pos + "]");
                 if (insert)
-                    groupAdapter.notifyItemInserted(--pos);
+                    groupAdapter.notifyItemInserted(pos);
                 else
                     groupAdapter.notifyItemChanged(pos);
                 break;
@@ -124,7 +122,9 @@ public class MainActivity extends AppCompatActivity implements ChangeListener {
         int id = item.getItemId();
 
         //noinspection SimplifiableIfStatement
-        if (id == R.id.action_settings) {
+        if (id == R.id.add_group) {
+            Alert alert = new Alert(this, this).forGroup(null);
+            alert.show();
             return true;
         }
 

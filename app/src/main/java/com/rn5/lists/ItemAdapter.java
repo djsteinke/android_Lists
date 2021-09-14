@@ -42,6 +42,12 @@ public class ItemAdapter extends RecyclerView.Adapter<ItemAdapter.ItemViewHolder
         this.changeListener = changeListener;
     }
 
+    public void clear() {
+        int size = mDataset.size();
+        mDataset.clear();
+        notifyItemRangeRemoved(0, size);
+    }
+
     // Create new views (invoked by the layout manager)
     @Override
     @NonNull
@@ -65,37 +71,36 @@ public class ItemAdapter extends RecyclerView.Adapter<ItemAdapter.ItemViewHolder
         CheckBox checkBox = vItem.findViewById(R.id.checkbox);
 
         title.setText(mDataset.get(p).getTitle());
-        desc.setText(mDataset.get(p).getDescription());
+        String description = mDataset.get(p).getDescription();
+        if (description == null || description.isEmpty())
+            desc.setVisibility(View.GONE);
+        else {
+            desc.setVisibility(View.VISIBLE);
+            desc.setText(description);
+        }
         checkBox.setChecked(mDataset.get(p).isChecked());
 
         //vItem.setBackgroundColor(checkBox.isChecked()?gray:white);
         title.setTextColor(checkBox.isChecked()?gray:black);
         desc.setTextColor(checkBox.isChecked()?gray:black);
 
-        checkBox.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
-            @Override
-            public void onCheckedChanged(CompoundButton compoundButton, boolean b) {
-                //listItems.get(p).setChecked(b);
-                title.setTextColor(b?gray:black);
-                desc.setTextColor(b?gray:black);
-                changeListener.onTick();
-                changeListener.onCheckedChange(p);
-            }
+        checkBox.setOnCheckedChangeListener((compoundButton, b) -> {
+            //listItems.get(p).setChecked(b);
+            title.setTextColor(b?gray:black);
+            desc.setTextColor(b?gray:black);
+            changeListener.onTick();
+            changeListener.onCheckedChange(p);
         });
 
-        vItem.setOnLongClickListener(new View.OnLongClickListener() {
-            @Override
-            public boolean onLongClick(View view) {
-                //listItems.remove(p);
-                //notifyDataSetChanged();
-                changeListener.onTick();
-                return false;
-            }
+        vItem.setOnLongClickListener(view -> {
+            //listItems.remove(p);
+            //notifyDataSetChanged();
+            changeListener.onTick();
+            return false;
         });
 
     }
 
-    // Return the size of your dataset (invoked by the layout manager)
     @Override
     public int getItemCount() {
         return mDataset.size();

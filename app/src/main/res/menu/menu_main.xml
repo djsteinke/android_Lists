@@ -3,8 +3,15 @@
     xmlns:tools="http://schemas.android.com/tools"
     tools:context="com.rn5.lists.MainActivity">
     <item
-        android:id="@+id/action_settings"
-        android:orderInCategory="100"
+        android:id="@+id/main_menu"
+        android:icon="@drawable/ic_baseline_more_vert_24"
         android:title="@string/action_settings"
-        app:showAsAction="never" />
+        app:showAsAction="always">
+        <menu>
+            <item
+                android:id="@+id/add_group"
+                android:title="@string/add_group"
+                android:icon="@drawable/ic_baseline_post_add_24"/>
+        </menu>
+    </item>
 </menu>

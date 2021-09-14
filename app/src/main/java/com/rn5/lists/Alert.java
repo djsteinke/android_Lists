@@ -72,6 +72,7 @@ public class Alert {
                 .setPositiveButton(R.string.save, (dialog, id) -> {
                     String t = editTitle.getText().toString();
                     int pos = -1;
+                    boolean insert = false;
                     if (t != null && !t.isEmpty())
                     switch (listType) {
                         case ITEM:
@@ -80,21 +81,25 @@ public class Alert {
                                 item.setTitle(t);
                                 item.setDescription(d);
                                 pos = lists.add(item, group.getName());
-                            } else
+                            } else {
                                 pos = lists.add(new Item().withTitle(t).withDescription(d), group.getName());
+                                insert = true;
+                            }
                             break;
                         case GROUP:
                             if (group != null) {
                                 group.setName(t);
                                 pos = lists.add(group);
-                            } else
+                            } else {
                                 pos = lists.add(new Group(t));
+                                insert = true;
+                            }
                             break;
                         default:
                             break;
                     }
                     if (pos != -1) {
-                        listener.onAdd(listType, pos);
+                        listener.onAdd(listType, pos, insert);
                         lists.save();
                     }
                     listener.onTick();

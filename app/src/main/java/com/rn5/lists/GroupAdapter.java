@@ -14,6 +14,7 @@ import java.util.List;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.widget.AppCompatImageButton;
+import androidx.core.content.ContextCompat;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
@@ -36,23 +37,53 @@ public class GroupAdapter extends RecyclerView.Adapter<GroupAdapter.GroupViewHol
         RecyclerView itemRecycler;
         ItemAdapter itemAdapter;
         Group group;
+        boolean expanded = true;
         GroupViewHolder(View v) {
             super(v);
             vItem = v;
         }
 
-        @Override
-        public void onCheckedChange(int position) {
+        public void expand() {
+            itemRecycler.setVisibility(expanded ? View.GONE : View.VISIBLE);
+            expanded = !expanded;
+            lists.expand(group);
+        }
 
+        public void setInProgCnt() {
+            final TextView itemCount = vItem.findViewById(R.id.item_count);
+            String val = String.valueOf(group.getInProgCnt());
+            itemCount.setText(val);
+        }
+
+        public void setItemRecycler(RecyclerView recyclerView) {
+            this.itemRecycler = recyclerView;
+            this.itemRecycler.setVisibility(expanded ? View.VISIBLE : View.GONE);
+        }
+
+        public void setGroup(Group g) {
+            this.group = g;
+            this.expanded = g.isExpanded();
         }
 
         @Override
-        public void onAdd(ListType listType, int pos) {
+        public void onCheckedChange(int position) {
+            Log.d(TAG, "onCheckedChange(" + position + ")");
+            lists.check(group.getName(), position);
+            setInProgCnt();
+        }
+
+        @Override
+        public void onAdd(ListType listType, int pos, boolean insert) {
             Log.d(TAG, "onAdd");
             group = lists.getGroups().get(this.getAdapterPosition());
             Log.d(TAG, "onAdd() Group[" + group.toString() + "]");
-            if (itemAdapter != null)
-                itemAdapter.notifyDataSetChanged();
+            if (itemAdapter != null) {
+                if (insert)
+                    itemAdapter.notifyItemInserted(pos);
+                else
+                    itemAdapter.notifyItemChanged(pos);
+            }
+                //itemAdapter.notifyDataSetChanged();
         }
 
         @Override
@@ -93,10 +124,11 @@ public class GroupAdapter extends RecyclerView.Adapter<GroupAdapter.GroupViewHol
         String t = g.getName();
         title.setText(t);
 
+        holder.setInProgCnt();
         holder.setItemRecycler(vItem.findViewById(R.id.group_recycler));
         holder.getItemRecycler().setHasFixedSize(true);
         holder.getItemRecycler().setLayoutManager((new LinearLayoutManager(context)));
-        holder.setItemAdapter(new ItemAdapter(holder.getGroup().getItems(), listener, g.getName()));
+        holder.setItemAdapter(new ItemAdapter(holder.getGroup().getItems(), holder, g.getName()));
         holder.getItemRecycler().setAdapter(holder.getItemAdapter());
 
         final AppCompatImageButton add = vItem.findViewById(R.id.add_item);
@@ -105,6 +137,17 @@ public class GroupAdapter extends RecyclerView.Adapter<GroupAdapter.GroupViewHol
             Alert alert = new Alert(context, holder).forItem(g, null);
             alert.show();
         });
+
+        final AppCompatImageButton upDown = vItem.findViewById(R.id.up_down);
+        upDown.setImageDrawable(ContextCompat.getDrawable(context, getSrc(holder.expanded)));
+        upDown.setOnClickListener(v -> {
+            holder.expand();
+            upDown.setImageDrawable(ContextCompat.getDrawable(context, getSrc(holder.expanded)));
+        });
+    }
+
+    public int getSrc(boolean expanded) {
+        return (expanded ? R.drawable.ic_baseline_keyboard_arrow_up_24 :R.drawable.ic_baseline_keyboard_arrow_down_24);
     }
 
     @Override

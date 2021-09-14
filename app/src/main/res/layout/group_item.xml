@@ -3,7 +3,9 @@
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     xmlns:app="http://schemas.android.com/apk/res-auto"
-    android:padding="7dp">
+    android:padding="7dp"
+    android:layout_marginBottom="10dp"
+    android:background="@drawable/rounded_corner_rectangle">
     <TextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
@@ -14,13 +16,27 @@
         android:textSize="20sp"
         android:textColor="@color/black"
         android:textStyle=""/>
+    <TextView
+        android:id="@+id/item_count"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="5dp"
+        app:layout_constraintStart_toEndOf="@id/group_title"
+        app:layout_constraintTop_toTopOf="@id/group_title"/>
     <androidx.appcompat.widget.AppCompatImageButton
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:id="@+id/add_item"
-        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintEnd_toStartOf="@id/up_down"
         app:layout_constraintTop_toTopOf="parent"
         android:src="@drawable/ic_playlist_add_black_24dp"/>
+    <androidx.appcompat.widget.AppCompatImageButton
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:id="@+id/up_down"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        android:src="@drawable/ic_baseline_keyboard_arrow_up_24"/>
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/group_recycler"
         android:layout_width="match_parent"

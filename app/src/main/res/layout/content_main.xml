@@ -7,8 +7,7 @@
     app:layout_behavior="@string/appbar_scrolling_view_behavior"
     tools:context=".MainActivity"
     tools:showIn="@layout/activity_main"
-    android:layout_margin="10dp"
-    android:background="@drawable/rounded_corner_rectangle">
+    android:layout_margin="10dp">
 
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/recyclerView"
