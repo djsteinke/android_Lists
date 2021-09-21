@@ -1,8 +1,10 @@
 package com.rn5.lists;
 
+import com.rn5.lists.enums.ActionType;
+import com.rn5.lists.enums.ListType;
+
 public interface ChangeListener {
-    void onCheckedChange(int position);
-    void onAdd(ListType listType, int pos, boolean insert);
+    void onCheckedChange(long id);
+    void onListChange(ListType listType, int pos, ActionType action);
     void onTick();
-    void onLoadComplete();
 }

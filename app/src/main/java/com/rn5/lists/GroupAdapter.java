@@ -1,19 +1,21 @@
 package com.rn5.lists;
 
 import android.content.Context;
+import android.content.res.ColorStateList;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
 
+import com.rn5.lists.enums.ActionType;
+import com.rn5.lists.enums.GroupColor;
+import com.rn5.lists.enums.ListType;
 import com.rn5.lists.model.Group;
-
-import java.util.ArrayList;
-import java.util.List;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.widget.AppCompatImageButton;
+import androidx.constraintlayout.widget.ConstraintLayout;
 import androidx.core.content.ContextCompat;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
@@ -26,21 +28,36 @@ import static com.rn5.lists.MainActivity.lists;
 @Setter
 public class GroupAdapter extends RecyclerView.Adapter<GroupAdapter.GroupViewHolder> {
     private static final String TAG = GroupAdapter.class.getSimpleName();
-    private final List<Group> mDataset;
+    public static int[] colorList = new int[8];
+    public static int[] colorBackgroundList = new int[8];
     private final ChangeListener listener;
     private final Context context;
 
     @Getter
     @Setter
-    static class GroupViewHolder extends RecyclerView.ViewHolder implements ChangeListener {
-        View vItem;
-        RecyclerView itemRecycler;
-        ItemAdapter itemAdapter;
+    static class GroupViewHolder extends RecyclerView.ViewHolder implements ChangeListener{
+        final View vItem;
+        final RecyclerView itemRecycler;
+        final Context context;
         Group group;
+        ItemAdapter itemAdapter;
         boolean expanded = true;
-        GroupViewHolder(View v) {
-            super(v);
-            vItem = v;
+
+        GroupViewHolder(View vItem, Context context) {
+            super(vItem);
+            this.context = context;
+            this.vItem = vItem;
+            itemRecycler = vItem.findViewById(R.id.group_recycler);
+            itemRecycler.setLayoutManager((new LinearLayoutManager(context)));
+        }
+
+        public void initialize(Group group) {
+            this.group = group;
+            this.expanded = group.isExpanded();
+            itemRecycler.setVisibility(expanded ? View.VISIBLE : View.GONE);
+            itemAdapter = new ItemAdapter(context, group, this);
+            itemRecycler.setAdapter(itemAdapter);
+            setInProgCnt();
         }
 
         public void expand() {
@@ -50,58 +67,54 @@ public class GroupAdapter extends RecyclerView.Adapter<GroupAdapter.GroupViewHol
         }
 
         public void setInProgCnt() {
+            group = lists.getGroup(group);
             final TextView itemCount = vItem.findViewById(R.id.item_count);
             String val = String.valueOf(group.getInProgCnt());
             itemCount.setText(val);
         }
 
-        public void setItemRecycler(RecyclerView recyclerView) {
-            this.itemRecycler = recyclerView;
-            this.itemRecycler.setVisibility(expanded ? View.VISIBLE : View.GONE);
-        }
-
-        public void setGroup(Group g) {
-            this.group = g;
-            this.expanded = g.isExpanded();
-        }
-
         @Override
-        public void onCheckedChange(int position) {
-            Log.d(TAG, "onCheckedChange(" + position + ")");
-            lists.check(group.getName(), position);
+        public void onCheckedChange(long id) {
+            Log.d(TAG, "onCheckedChange(" + id + ")");
+            int pos = lists.check(group.getName(), id);
+            itemAdapter.notifyItemRangeChanged(pos, lists.getGroupItems(group).size()-pos);
             setInProgCnt();
         }
 
         @Override
-        public void onAdd(ListType listType, int pos, boolean insert) {
-            Log.d(TAG, "onAdd");
-            group = lists.getGroups().get(this.getAdapterPosition());
-            Log.d(TAG, "onAdd() Group[" + group.toString() + "]");
+        public void onListChange(ListType listType, int pos, ActionType action) {
+            Log.d(TAG, "onListChange() " + listType + " " + pos + " " + action);
             if (itemAdapter != null) {
-                if (insert)
-                    itemAdapter.notifyItemInserted(pos);
-                else
-                    itemAdapter.notifyItemChanged(pos);
+                switch (action) {
+                    case INSERT:
+                    case DELETE:
+                        setInProgCnt();
+                        break;
+                    case COLOR:
+                        GroupColor c = GroupColor.getFromIntValue(pos);
+                        vItem.setBackgroundTintList(ColorStateList.valueOf(context.getColor(c.getGroupColor())));
+                        lists.setColor(group, c);
+                        Log.d(TAG, "GroupColor[" + c + "]");
+                        break;
+                    case UPDATE:
+                    default:
+                        break;
+                }
             }
-                //itemAdapter.notifyDataSetChanged();
         }
 
         @Override
         public void onTick() {
 
         }
-
-        @Override
-        public void onLoadComplete() {
-
-        }
-
     }
 
-    GroupAdapter(Context context, ChangeListener listener, ArrayList<Group> mDataset) {
+    GroupAdapter(Context context, ChangeListener listener) {
         this.context = context;
         this.listener = listener;
-        this.mDataset = mDataset;
+
+        GroupAdapter.colorList = context.getResources().getIntArray(R.array.color_list);
+        GroupAdapter.colorBackgroundList = context.getResources().getIntArray(R.array.background_colors);
     }
 
     @Override
@@ -110,48 +123,61 @@ public class GroupAdapter extends RecyclerView.Adapter<GroupAdapter.GroupViewHol
                                                      int viewType) {
         View v = LayoutInflater.from(parent.getContext())
                 .inflate(R.layout.group_item, parent, false);
-        return new GroupAdapter.GroupViewHolder(v);
+        return new GroupAdapter.GroupViewHolder(v, context);
     }
 
     @Override
     public void onBindViewHolder(GroupAdapter.GroupViewHolder holder, int position) {
-
         final int p = holder.getAdapterPosition();
         final View vItem = holder.vItem;
         final TextView title = vItem.findViewById(R.id.group_title);
-        Group g = mDataset.get(p);
-        holder.setGroup(g);
+        Group g = lists.getGroups().get(p);
+        holder.initialize(g);
         String t = g.getName();
         title.setText(t);
+        vItem.setBackgroundTintList(ColorStateList.valueOf(context.getColor(g.getColor().getGroupColor())));
 
-        holder.setInProgCnt();
-        holder.setItemRecycler(vItem.findViewById(R.id.group_recycler));
-        holder.getItemRecycler().setHasFixedSize(true);
-        holder.getItemRecycler().setLayoutManager((new LinearLayoutManager(context)));
-        holder.setItemAdapter(new ItemAdapter(holder.getGroup().getItems(), holder, g.getName()));
-        holder.getItemRecycler().setAdapter(holder.getItemAdapter());
-
+        final AppCompatImageButton edit = vItem.findViewById(R.id.edit_group);
+        edit.setOnClickListener(v -> {
+            Alert alert = new Alert(context, holder).forGroup(this, g);
+            alert.show();
+        });
+/*
         final AppCompatImageButton add = vItem.findViewById(R.id.add_item);
         add.setOnClickListener(v -> {
-            // TODO popup
-            Alert alert = new Alert(context, holder).forItem(g, null);
+            Alert alert = new Alert(context, listener).forItem(holder.getItemAdapter(), g, null);
             alert.show();
         });
 
+        final AppCompatImageButton color = vItem.findViewById(R.id.pick_color);
+        color.setOnClickListener(v -> {
+            Alert alert = new Alert(context, holder).forColor();
+            ConstraintLayout layout = (ConstraintLayout) vItem;
+            int d = layout.getBackgroundTintList().getDefaultColor();
+            alert.showColor(d);
+        });
+
+ */
         final AppCompatImageButton upDown = vItem.findViewById(R.id.up_down);
-        upDown.setImageDrawable(ContextCompat.getDrawable(context, getSrc(holder.expanded)));
+
+        vItem.setOnClickListener(v -> {
+            holder.expand();
+            upDown.setBackground(ContextCompat.getDrawable(context, getSrc(holder.expanded)));
+        });
+
+        upDown.setBackground(ContextCompat.getDrawable(context, getSrc(holder.expanded)));
         upDown.setOnClickListener(v -> {
             holder.expand();
-            upDown.setImageDrawable(ContextCompat.getDrawable(context, getSrc(holder.expanded)));
+            upDown.setBackground(ContextCompat.getDrawable(context, getSrc(holder.expanded)));
         });
     }
 
     public int getSrc(boolean expanded) {
-        return (expanded ? R.drawable.ic_baseline_keyboard_arrow_up_24 :R.drawable.ic_baseline_keyboard_arrow_down_24);
+        return (expanded ? R.drawable.ic_baseline_close_24 :R.drawable.ic_baseline_add_24);
     }
 
     @Override
     public int getItemCount() {
-        return mDataset.size();
+        return lists.getGroups().size();
     }
 }

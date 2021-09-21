@@ -1,5 +1,8 @@
 package com.rn5.lists;
 
+import android.content.Context;
+import android.content.res.ColorStateList;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -7,21 +10,26 @@ import android.widget.CheckBox;
 import android.widget.CompoundButton;
 import android.widget.TextView;
 
+import com.rn5.lists.model.Group;
 import com.rn5.lists.model.Item;
 
 import java.util.List;
 
 import androidx.annotation.NonNull;
+import androidx.appcompat.widget.AppCompatImageButton;
+import androidx.appcompat.widget.AppCompatImageView;
+import androidx.core.content.ContextCompat;
 import androidx.recyclerview.widget.RecyclerView;
 
 import static com.rn5.lists.MainActivity.black;
 import static com.rn5.lists.MainActivity.gray;
+import static com.rn5.lists.MainActivity.lists;
 
 public class ItemAdapter extends RecyclerView.Adapter<ItemAdapter.ItemViewHolder> {
-    private final List<Item> mDataset;
+    private static final String TAG = ItemAdapter.class.getSimpleName();
     private final ChangeListener changeListener;
-    private final String groupName;
-
+    private final Context context;
+    private final Group group;
 
     // Provide a reference to the views for each data item
     // Complex data items may need more than one view per item, and
@@ -36,16 +44,10 @@ public class ItemAdapter extends RecyclerView.Adapter<ItemAdapter.ItemViewHolder
     }
 
     // Provide a suitable constructor (depends on the kind of dataset)
-    ItemAdapter(List<Item> myDataset, ChangeListener changeListener, String groupName) {
-        mDataset = myDataset;
-        this.groupName = groupName;
+    ItemAdapter(Context context, Group group, ChangeListener changeListener) {
+        this.context = context;
+        this.group = group;
         this.changeListener = changeListener;
-    }
-
-    public void clear() {
-        int size = mDataset.size();
-        mDataset.clear();
-        notifyItemRangeRemoved(0, size);
     }
 
     // Create new views (invoked by the layout manager)
@@ -69,40 +71,52 @@ public class ItemAdapter extends RecyclerView.Adapter<ItemAdapter.ItemViewHolder
         final TextView title = vItem.findViewById(R.id.title);
         final TextView desc = vItem.findViewById(R.id.description);
         CheckBox checkBox = vItem.findViewById(R.id.checkbox);
+        final Item i = lists.getGroupItems(group).get(p);
 
-        title.setText(mDataset.get(p).getTitle());
-        String description = mDataset.get(p).getDescription();
+        title.setText(i.getTitle());
+        String description = i.getDescription();
         if (description == null || description.isEmpty())
             desc.setVisibility(View.GONE);
         else {
             desc.setVisibility(View.VISIBLE);
             desc.setText(description);
         }
-        checkBox.setChecked(mDataset.get(p).isChecked());
+        checkBox.setOnCheckedChangeListener(null);
+        checkBox.setChecked(i.isChecked());
 
         //vItem.setBackgroundColor(checkBox.isChecked()?gray:white);
         title.setTextColor(checkBox.isChecked()?gray:black);
-        desc.setTextColor(checkBox.isChecked()?gray:black);
+        if (i.getId() == -1) {
+            AppCompatImageView add = vItem.findViewById(R.id.add_image);
+            add.setVisibility(View.VISIBLE);
+            checkBox.setVisibility(View.INVISIBLE);
+            title.setTextColor(context.getColor(R.color.gray_med));
+            vItem.setBackground(ContextCompat.getDrawable(context, R.drawable.rounded_corner_rectangle));
+            vItem.setBackgroundTintList(ColorStateList.valueOf(context.getColor(R.color.white)));
+            vItem.setOnClickListener(v -> {
+                Alert alert = new Alert(context, changeListener).forItem(this, group, null);
+                alert.show();
+            });
+        } else {
+            desc.setTextColor(checkBox.isChecked() ? gray : black);
 
-        checkBox.setOnCheckedChangeListener((compoundButton, b) -> {
-            //listItems.get(p).setChecked(b);
-            title.setTextColor(b?gray:black);
-            desc.setTextColor(b?gray:black);
-            changeListener.onTick();
-            changeListener.onCheckedChange(p);
-        });
+            checkBox.setOnCheckedChangeListener((compoundButton, b) -> {
+                title.setTextColor(b ? gray : black);
+                desc.setTextColor(b ? gray : black);
+                changeListener.onCheckedChange(i.getId());
+                changeListener.onTick();
+            });
 
-        vItem.setOnLongClickListener(view -> {
-            //listItems.remove(p);
-            //notifyDataSetChanged();
-            changeListener.onTick();
-            return false;
-        });
+            vItem.setOnClickListener(v -> {
+                Alert alert = new Alert(context, changeListener).forItem(this, group, i);
+                alert.show();
+            });
+        }
 
     }
 
     @Override
     public int getItemCount() {
-        return mDataset.size();
+        return lists.getItemCnt(group);
     }
 }

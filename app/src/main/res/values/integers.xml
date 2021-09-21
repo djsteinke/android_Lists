@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <integer-array name="colors">
+        <item>@color/red</item>
+        <item>@color/orange</item>
+        <item>@color/yellow</item>
+        <item>@color/green</item>
+        <item>@color/blue</item>
+        <item>@color/purple</item>
+        <item>-1</item>
+        <item>@color/gray</item>
+    </integer-array>
+
+    <integer-array name="background_colors">
+        <item>@color/group_red</item>
+        <item>@color/group_orange</item>
+        <item>@color/group_yellow</item>
+        <item>@color/group_green</item>
+        <item>@color/group_blue</item>
+        <item>@color/group_purple</item>
+        <item>-1</item>
+        <item>@color/off_white</item>
+    </integer-array>
+</resources>

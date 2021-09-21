@@ -6,7 +6,33 @@
 
     <color name="black">#000000</color>
     <color name="white">#FFFFFF</color>
-    <color name="off_white">#EEEEEE</color>
-    <color name="gray">#BBBBBB</color>
-    <color name="gray_dark">#666666</color>
+    <color name="off_white">#F2F3F4</color>
+    <color name="gray">#BDC3C7</color>
+    <color name="gray_med">#909497</color>
+    <color name="gray_dark">#626567</color>
+
+    <color name="group_red">#FADBD8</color>
+    <color name="group_purple">#EBDEF0</color>
+    <color name="group_blue">#D6EAF8</color>
+    <color name="group_green">#D4EFDF</color>
+    <color name="group_yellow">#FCF3CF</color>
+    <color name="group_orange">#FDEBD0</color>
+
+    <color name="bk_red">#FDEDEC</color>
+    <color name="bk_purple">#F4ECF7</color>
+    <color name="bk_blue">#EBF5FB</color>
+    <color name="bk_green">#E9F7EF</color>
+    <color name="bk_yellow">#FEF9E7</color>
+    <color name="bk_orange">#FEF5E7</color>
+
+    <color name="add">#52BE80</color>
+
+    <color name="red">#C0392B</color>
+    <color name="purple">#8E44AD</color>
+    <color name="blue">#3498DB</color>
+    <color name="green">#27AE60</color>
+    <color name="yellow">#F1C40F</color>
+    <color name="blue2">#2980B9</color>
+    <color name="orange">#E67E22</color>
+
 </resources>

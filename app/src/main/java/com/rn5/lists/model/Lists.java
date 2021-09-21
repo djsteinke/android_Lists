@@ -2,8 +2,14 @@ package com.rn5.lists.model;
 
 import android.util.Log;
 
+import com.rn5.lists.enums.GroupColor;
+
 import java.io.IOException;
+import java.time.LocalDate;
+import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.Date;
 
 import lombok.Getter;
 import lombok.Setter;
@@ -12,84 +18,135 @@ import lombok.ToString;
 import static com.rn5.lists.Constants.loadFromFile;
 import static com.rn5.lists.Constants.saveToFile;
 import static com.rn5.lists.Constants.toJson;
+import static com.rn5.lists.MainActivity.settings;
 
 @Getter
 @Setter
 @ToString
-public class Lists {
+public class Lists extends AbstractList<Group> {
 
     private static final String TAG = Lists.class.getSimpleName();
     private static final String fileName = "lists.json";
-    private ArrayList<Group> groups = new ArrayList<>();
 
-    public Lists() { }
+    public Lists() {}
 
-    public int add(Group group) {
-        int j = 0;
-        for (Group g : groups) {
-            if (g.equals(group)) {
-                groups.set(j, group);
-                return j;
-            }
-            j++;
+    public Group getGroup(Group group) {
+        int i = values.indexOf(group);
+        if (i > -1)
+            return values.get(i);
+        return null;
+    }
+
+    public ArrayList<Group> getGroups() {
+        return values;
+    }
+
+    public ArrayList<Item> getGroupItems(Group g) {
+        for (Group group : values) {
+            if (group.equals(g))
+                return group.getItems();
         }
-        groups.add(group);
-        return j;
+        return null;
     }
 
-    public void remove(Group group) {
-        groups.remove(group);
+    public int getItemCnt(Group in) {
+        int i = values.indexOf(in);
+        Group g = values.get(i);
+        return g.getItemCnt();
     }
 
-    public void expand(Group group) {
+    public void setColor(Group in, GroupColor color) {
+        values.stream()
+                .filter(in::equals)
+                .findAny().ifPresent(group -> group.setColor(color));
+        save();
+    }
+
+    public int add(Item item, Group group) {
         int j = 0;
-        for (Group g : groups) {
+        for (Group g : values) {
             if (g.equals(group)) {
-                groups.get(j).expanded();
-                save();
-                return;
-            }
-            j++;
-        }
-    }
-
-    public int add(Item item, String groupName) {
-        for (Group g : groups) {
-            if (g.getName().equals(groupName)) {
                 return g.add(item);
             }
         }
         return -1;
     }
 
-    public void check(String groupName, int pos) {
-        Log.d(TAG, "Group[" + groupName + "]" + " Pos[" + pos + "]");
-        for (Group g : groups) {
-            if (g.getName().equals(groupName)) {
-                boolean isChecked = g.getItems().get(pos).isChecked();
-                g.getItems().get(pos).isChecked(!isChecked);
+    public int remove(Item item, Group group) {
+        int j = -1;
+        for (Group g : values) {
+            if (g.equals(group)) {
+                j = g.getItems().indexOf(item);
+                if (j >= 0)
+                    g.remove(item);
+                break;
+            }
+        }
+        return j;
+    }
+
+    public void expand(Group group) {
+        int j = 0;
+        for (Group g : values) {
+            if (g.equals(group)) {
+                values.get(j).expanded();
                 save();
                 return;
             }
+            j++;
         }
     }
 
-    public String getItemGroup(Item item) {
-        for (Group g : groups) {
-            for (Item i : g.getItems()) {
-                if (i.equals(item)) {
-                    return g.getName();
+    public int check(String groupName, long id) {
+        Log.d(TAG, "Group[" + groupName + "]" + " ID[" + id + "]");
+        boolean checked = false;
+        Group group = null;
+        Item item = null;
+        int pos = -1;
+        for (Group g : values) {
+            if (g.getName().equals(groupName)) {
+                group = g;
+                for (Item i : g.getItems()) {
+                    if (i.getId() == id) {
+                        item = i;
+                        pos = g.getItems().indexOf(i);
+                        checked = i.check();
+                        break;
+                    }
                 }
             }
         }
-        return null;
+        if (pos >= 0) {
+            group.sort();
+            if (!checked)
+                pos = group.getItems().indexOf(item);
+            save();
+        }
+        return pos;
     }
 
     public static Lists load() {
+        Calendar today = Calendar.getInstance();
+        LocalDate ld = LocalDate.of(today.get(Calendar.YEAR), today.get(Calendar.MONTH), today.get(Calendar.DAY_OF_MONTH));
         try {
             Lists lists = loadFromFile(fileName, Lists.class);
             if (lists == null)
                 lists = new Lists();
+            else {
+                for (Group g : lists.getGroups()) {
+                    g.sort();
+                    for (Item i : g.getItems()) {
+                        if (i.getCompleteDt() > 0) {
+                            Calendar iCal = Calendar.getInstance();
+                            iCal.setTimeInMillis(i.getCompleteDt());
+                            LocalDate iLD = LocalDate.of(iCal.get(Calendar.YEAR), iCal.get(Calendar.MONTH), iCal.get(Calendar.DAY_OF_MONTH));
+                            int d = (int) ChronoUnit.DAYS.between(iLD,ld);
+                            if (d >= settings.getDeleteAfter())
+                                g.remove(i);
+                        }
+                    }
+                }
+            }
             return lists;
         } catch (Exception e) {
             Log.e(TAG, "Lists.load() failed. Error: " + e.getMessage());

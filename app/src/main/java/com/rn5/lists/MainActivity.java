@@ -4,8 +4,12 @@ import android.content.Context;
 import android.os.Bundle;
 
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
+import com.rn5.lists.enums.ActionType;
+import com.rn5.lists.enums.ListType;
 import com.rn5.lists.model.Group;
+import com.rn5.lists.model.Item;
 import com.rn5.lists.model.Lists;
+import com.rn5.lists.model.Settings;
 
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
@@ -19,17 +23,15 @@ import android.view.Menu;
 import android.view.MenuItem;
 
 import java.io.File;
-import java.util.ArrayList;
 
 public class MainActivity extends AppCompatActivity implements ChangeListener {
 
     private static final String TAG = MainActivity.class.getSimpleName();
     public GroupAdapter groupAdapter;
     public static Lists lists;
+    public static Settings settings;
     private Vibrator vibrator;
-    private RecyclerView groupRecycler;
     public static LoadListener loadListener;
-    private ArrayList<Group> groups;
 
     public static int black;
     public static int gray;
@@ -51,7 +53,7 @@ public class MainActivity extends AppCompatActivity implements ChangeListener {
                     .setAction("Action", null).show();
 
              */
-            Alert alert = new Alert(this, this).forGroup(null);
+            Alert alert = new Alert(this, this).forGroup(groupAdapter, null);
             alert.show();
         });
 
@@ -59,43 +61,53 @@ public class MainActivity extends AppCompatActivity implements ChangeListener {
         filePathApp = this.getExternalFilesDir("Lists");
         // specify an adapter (see also next example)
 
+        settings = Settings.load();
         lists = Lists.load();
-        groups = lists.getGroups();
+        fixLists();
 
-        gray = getResources().getColor(R.color.gray);
-        white = getResources().getColor(R.color.white);
-        black = getResources().getColor(R.color.black);
+        gray = getColor(R.color.gray);
+        white = getColor(R.color.white);
+        black = getColor(R.color.black);
 
-        groupRecycler = findViewById(R.id.recyclerView);
-        groupRecycler.setHasFixedSize(true);
+        RecyclerView groupRecycler = findViewById(R.id.recyclerView);
         groupRecycler.setLayoutManager(new LinearLayoutManager(this));
-        groupAdapter = new GroupAdapter(this, this, groups);
+        groupAdapter = new GroupAdapter(this, this);
         groupRecycler.setAdapter(groupAdapter);
     }
 
-    @Override
-    public void onLoadComplete() {
-
+    private void fixLists() {
+        for (Group g : lists.getGroups()) {
+            Item addItem = new Item(-1).withTitle("Add new item");
+            if (!g.getItems().contains(addItem))
+                g.add(addItem);
+        }
+        lists.save();
     }
 
     @Override
-    public void onCheckedChange(int position) {
+    public void onCheckedChange(long id) {
         //orderList(position);
     }
 
     @Override
-    public void onAdd(ListType listType, int pos, boolean insert) {
+    public void onListChange(ListType listType, int pos, ActionType action) {
         Log.d(TAG, "onAdd()" + listType);
         switch (listType) {
-            case ITEM:
-                break;
             case GROUP:
-                Log.d(TAG, "onAdd()" + groups + " pos[" + pos + "]");
-                if (insert)
-                    groupAdapter.notifyItemInserted(pos);
-                else
-                    groupAdapter.notifyItemChanged(pos);
-                break;
+                switch (action) {
+                    case INSERT:
+                        groupAdapter.notifyItemInserted(pos);
+                        break;
+                    case UPDATE:
+                        groupAdapter.notifyItemChanged(pos);
+                        break;
+                    case DELETE:
+                        groupAdapter.notifyItemRemoved(pos);
+                        break;
+                    default:
+                        break;
+                }
+            case ITEM:
             default:
                 break;
         }
@@ -123,7 +135,7 @@ public class MainActivity extends AppCompatActivity implements ChangeListener {
 
         //noinspection SimplifiableIfStatement
         if (id == R.id.add_group) {
-            Alert alert = new Alert(this, this).forGroup(null);
+            Alert alert = new Alert(this, this).forGroup(groupAdapter, null);
             alert.show();
             return true;
         }
