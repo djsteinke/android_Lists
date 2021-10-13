@@ -1,7 +1,5 @@
 package com.rn5.lists.model;
 
-import java.util.Comparator;
-
 import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;

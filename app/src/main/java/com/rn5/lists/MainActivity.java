@@ -6,13 +6,16 @@ import android.os.Bundle;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.rn5.lists.enums.ActionType;
 import com.rn5.lists.enums.ListType;
+import com.rn5.lists.model.DragListener;
 import com.rn5.lists.model.Group;
 import com.rn5.lists.model.Item;
 import com.rn5.lists.model.Lists;
 import com.rn5.lists.model.Settings;
 
+import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
+import androidx.recyclerview.widget.ItemTouchHelper;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 import lombok.SneakyThrows;
@@ -24,7 +27,7 @@ import android.view.MenuItem;
 
 import java.io.File;
 
-public class MainActivity extends AppCompatActivity implements ChangeListener {
+public class MainActivity extends AppCompatActivity implements ChangeListener, DragListener {
 
     private static final String TAG = MainActivity.class.getSimpleName();
     public GroupAdapter groupAdapter;
@@ -37,6 +40,8 @@ public class MainActivity extends AppCompatActivity implements ChangeListener {
     public static int gray;
     public static int white;
     public static File filePathApp;
+
+    private ItemTouchHelper groupTouchHelper;
 
     @SneakyThrows
     @Override
@@ -73,7 +78,29 @@ public class MainActivity extends AppCompatActivity implements ChangeListener {
         groupRecycler.setLayoutManager(new LinearLayoutManager(this));
         groupAdapter = new GroupAdapter(this, this);
         groupRecycler.setAdapter(groupAdapter);
+
+        ItemTouchHelper.SimpleCallback simpleCallback = new ItemTouchHelper.SimpleCallback(
+                ItemTouchHelper.UP | ItemTouchHelper.DOWN | ItemTouchHelper.START | ItemTouchHelper.END, 0) {
+            @Override
+            public boolean onMove(@NonNull RecyclerView recyclerView, @NonNull RecyclerView.ViewHolder viewHolder, @NonNull RecyclerView.ViewHolder target) {
+                int fromPosition = viewHolder.getAdapterPosition();
+                int toPosition = target.getAdapterPosition();
+                lists.swapGroups(fromPosition, toPosition);
+                groupAdapter.notifyItemMoved(fromPosition, toPosition);
+                return false;
+            }
+            @Override
+            public void onSwiped(@NonNull RecyclerView.ViewHolder viewHolder, int direction) {
+            }
+            @Override
+            public boolean isLongPressDragEnabled() {
+                return false;
+            }
+        };
+        groupTouchHelper = new ItemTouchHelper(simpleCallback);
+        groupTouchHelper.attachToRecyclerView(groupRecycler);
     }
+
 
     private void fixLists() {
         for (Group g : lists.getGroups()) {
@@ -82,6 +109,11 @@ public class MainActivity extends AppCompatActivity implements ChangeListener {
                 g.add(addItem);
         }
         lists.save();
+    }
+
+    @Override
+    public void requestDrag(RecyclerView.ViewHolder viewHolder) {
+        groupTouchHelper.startDrag(viewHolder);
     }
 
     @Override

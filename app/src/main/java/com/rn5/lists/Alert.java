@@ -1,6 +1,7 @@
 package com.rn5.lists;
 
 import android.content.Context;
+import android.content.res.ColorStateList;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -9,6 +10,7 @@ import android.widget.GridLayout;
 import android.widget.TextView;
 
 import com.rn5.lists.enums.ActionType;
+import com.rn5.lists.enums.GroupColor;
 import com.rn5.lists.enums.ListType;
 import com.rn5.lists.model.Group;
 import com.rn5.lists.model.Item;
@@ -121,22 +123,28 @@ public class Alert {
                             }
                             break;
                         case GROUP:
+                            int color = 7;
+                            if (grid != null) {
+                                for (int i = 0; i < 8; i++) {
+                                    View button = grid.getChildAt(i);
+                                    if (button.isSelected()) {
+                                        Log.d(TAG, "selectedColor: " + i);
+                                        color = i;
+                                        listener.onListChange(ListType.GROUP, i, ActionType.COLOR);
+                                        break;
+                                    }
+                                }
+                            }
                             if (group != null) {
                                 group.setName(t);
                                 pos = lists.add(group);
                                 groupAdapter.notifyItemChanged(pos);
                             } else {
-                                pos = lists.add(new Group(t));
+                                Group newGroup = new Group(t);
+                                GroupColor c = GroupColor.getFromIntValue(color);
+                                newGroup.setColor(c);
+                                pos = lists.add(newGroup);
                                 groupAdapter.notifyItemInserted(pos);
-                            }
-                            if (grid != null) {
-                                for (int i = 0; i < 8; i++) {
-                                    View button = grid.getChildAt(i);
-                                    if (button.isSelected()) {
-                                        listener.onListChange(ListType.GROUP, i, ActionType.COLOR);
-                                        break;
-                                    }
-                                }
                             }
                             break;
                         default:
@@ -169,47 +177,6 @@ public class Alert {
                 listener.onTick();
             });
         }
-
-        AlertDialog dialog = builder.create();
-        dialog.show();
-    }
-
-    public void showColor(int color) {
-        AlertDialog.Builder builder = new AlertDialog.Builder(context);
-        LayoutInflater inflater = LayoutInflater.from(context);
-
-        int pos = -1;
-        for (int c : GroupAdapter.colorBackgroundList) {
-            if (c == color) {
-                pos++;
-                break;
-            }
-            pos ++;
-        }
-
-        final View view = inflater.inflate(R.layout.color_alert, null);
-        final GridLayout grid = view.findViewById(R.id.grid_view);
-        for (int i=0; i<8; i++) {
-            AppCompatImageButton button = (AppCompatImageButton) grid.getChildAt(i);
-            if (i == pos)
-                button.setSelected(true);
-            button.setOnClickListener(colorClick(button, grid));
-        }
-
-        builder.setView(view)
-                .setPositiveButton(R.string.save, (dialog, id) -> {
-                    // TODO on color selected
-                    for (int i=0; i<8; i++) {
-                        View button = grid.getChildAt(i);
-                        if (button.isSelected()) {
-                            listener.onListChange(ListType.GROUP, i, ActionType.COLOR);
-                            break;
-                        }
-                    }
-                })
-                .setNegativeButton(R.string.cancel, (dialog, id) -> {
-                    // TODO tick()
-                });
 
         AlertDialog dialog = builder.create();
         dialog.show();

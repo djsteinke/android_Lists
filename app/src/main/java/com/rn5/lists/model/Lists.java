@@ -9,6 +9,7 @@ import java.time.LocalDate;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.Collections;
 import java.util.Date;
 
 import lombok.Getter;
@@ -35,6 +36,11 @@ public class Lists extends AbstractList<Group> {
         if (i > -1)
             return values.get(i);
         return null;
+    }
+
+    public void swapGroups(int from, int to) {
+        Collections.swap(values, from, to);
+        save();
     }
 
     public ArrayList<Group> getGroups() {
@@ -133,16 +139,30 @@ public class Lists extends AbstractList<Group> {
             if (lists == null)
                 lists = new Lists();
             else {
+                Log.d(TAG, "getGroups()");
                 for (Group g : lists.getGroups()) {
+                    Log.d(TAG, "sort()");
                     g.sort();
+                    Log.d(TAG, "getItems() " + g.getName());
+                    ArrayList<Item> deleteItems = new ArrayList<>();
                     for (Item i : g.getItems()) {
+                        Log.d(TAG, "check completed() " + i.getTitle());
                         if (i.getCompleteDt() > 0) {
                             Calendar iCal = Calendar.getInstance();
                             iCal.setTimeInMillis(i.getCompleteDt());
                             LocalDate iLD = LocalDate.of(iCal.get(Calendar.YEAR), iCal.get(Calendar.MONTH), iCal.get(Calendar.DAY_OF_MONTH));
                             int d = (int) ChronoUnit.DAYS.between(iLD,ld);
-                            if (d >= settings.getDeleteAfter())
-                                g.remove(i);
+                            if (d >= settings.getDeleteAfter()) {
+                                Log.d(TAG, "g.addDelete() " + i.getTitle());
+                                deleteItems.add(i);
+                            }
+                        }
+                        Log.d(TAG, "next Item");
+                    }
+                    if (deleteItems.size() > 0) {
+                        for (Item i : deleteItems) {
+                            Log.d(TAG, "g.remove() " + i.getTitle());
+                            g.remove(i);
                         }
                     }
                 }

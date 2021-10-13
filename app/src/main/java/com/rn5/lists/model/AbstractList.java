@@ -16,7 +16,8 @@ public abstract class AbstractList<T extends Comparable<? super T>> {
             values.set(j, t);
         else {
             values.add(t);
-            sort();
+            if (t instanceof Item)
+                sort();
             j = values.indexOf(t);
         }
         return j;

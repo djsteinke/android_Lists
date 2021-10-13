@@ -4,6 +4,7 @@ import android.content.Context;
 import android.content.res.ColorStateList;
 import android.util.Log;
 import android.view.LayoutInflater;
+import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
@@ -11,11 +12,11 @@ import android.widget.TextView;
 import com.rn5.lists.enums.ActionType;
 import com.rn5.lists.enums.GroupColor;
 import com.rn5.lists.enums.ListType;
+import com.rn5.lists.model.DragListener;
 import com.rn5.lists.model.Group;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.widget.AppCompatImageButton;
-import androidx.constraintlayout.widget.ConstraintLayout;
 import androidx.core.content.ContextCompat;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
@@ -30,7 +31,7 @@ public class GroupAdapter extends RecyclerView.Adapter<GroupAdapter.GroupViewHol
     private static final String TAG = GroupAdapter.class.getSimpleName();
     public static int[] colorList = new int[8];
     public static int[] colorBackgroundList = new int[8];
-    private final ChangeListener listener;
+    private final DragListener dragListener;
     private final Context context;
 
     @Getter
@@ -42,6 +43,7 @@ public class GroupAdapter extends RecyclerView.Adapter<GroupAdapter.GroupViewHol
         Group group;
         ItemAdapter itemAdapter;
         boolean expanded = true;
+        ChangeListener listener;
 
         GroupViewHolder(View vItem, Context context) {
             super(vItem);
@@ -105,13 +107,14 @@ public class GroupAdapter extends RecyclerView.Adapter<GroupAdapter.GroupViewHol
 
         @Override
         public void onTick() {
-
+            if (listener != null)
+                listener.onTick();
         }
     }
 
-    GroupAdapter(Context context, ChangeListener listener) {
+    GroupAdapter(Context context, DragListener dragListener) {
         this.context = context;
-        this.listener = listener;
+        this.dragListener = dragListener;
 
         GroupAdapter.colorList = context.getResources().getIntArray(R.array.color_list);
         GroupAdapter.colorBackgroundList = context.getResources().getIntArray(R.array.background_colors);
@@ -142,30 +145,25 @@ public class GroupAdapter extends RecyclerView.Adapter<GroupAdapter.GroupViewHol
             Alert alert = new Alert(context, holder).forGroup(this, g);
             alert.show();
         });
-/*
-        final AppCompatImageButton add = vItem.findViewById(R.id.add_item);
-        add.setOnClickListener(v -> {
-            Alert alert = new Alert(context, listener).forItem(holder.getItemAdapter(), g, null);
-            alert.show();
+
+        AppCompatImageButton drag = vItem.findViewById(R.id.drag);
+        drag.setOnTouchListener((v, event) -> {
+            if (event.getAction() == MotionEvent.ACTION_DOWN) {
+                dragListener.requestDrag(holder);
+                return true;
+            } else {
+                return false;
+            }
         });
 
-        final AppCompatImageButton color = vItem.findViewById(R.id.pick_color);
-        color.setOnClickListener(v -> {
-            Alert alert = new Alert(context, holder).forColor();
-            ConstraintLayout layout = (ConstraintLayout) vItem;
-            int d = layout.getBackgroundTintList().getDefaultColor();
-            alert.showColor(d);
-        });
-
- */
         final AppCompatImageButton upDown = vItem.findViewById(R.id.up_down);
+        upDown.setBackground(ContextCompat.getDrawable(context, getSrc(holder.expanded)));
 
-        vItem.setOnClickListener(v -> {
+        title.setOnClickListener(v -> {
             holder.expand();
             upDown.setBackground(ContextCompat.getDrawable(context, getSrc(holder.expanded)));
         });
 
-        upDown.setBackground(ContextCompat.getDrawable(context, getSrc(holder.expanded)));
         upDown.setOnClickListener(v -> {
             holder.expand();
             upDown.setBackground(ContextCompat.getDrawable(context, getSrc(holder.expanded)));
@@ -173,7 +171,7 @@ public class GroupAdapter extends RecyclerView.Adapter<GroupAdapter.GroupViewHol
     }
 
     public int getSrc(boolean expanded) {
-        return (expanded ? R.drawable.ic_baseline_close_24 :R.drawable.ic_baseline_add_24);
+        return (expanded ? R.drawable.ic_baseline_close_24 :R.drawable.ic_baseline_keyboard_arrow_down_24);
     }
 
     @Override
