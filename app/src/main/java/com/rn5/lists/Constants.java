@@ -16,6 +16,8 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.Reader;
 import java.nio.charset.StandardCharsets;
+import java.text.SimpleDateFormat;
+import java.util.Locale;
 
 import static com.rn5.lists.MainActivity.filePathApp;
 import static com.rn5.lists.MainActivity.loadListener;
@@ -24,6 +26,7 @@ public abstract class Constants {
     private Constants() {}
 
     public static final int dayInMs = 86400000;
+    public static final SimpleDateFormat sdfError = new SimpleDateFormat("yyyyMMddHHmmss", Locale.US);
 
     public static <T> T fromJson(String json, Class<T> t) {
         Gson gson = new Gson();

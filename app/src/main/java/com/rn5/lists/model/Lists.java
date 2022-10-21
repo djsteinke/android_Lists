@@ -18,6 +18,7 @@ import lombok.ToString;
 
 import static com.rn5.lists.Constants.loadFromFile;
 import static com.rn5.lists.Constants.saveToFile;
+import static com.rn5.lists.Constants.sdfError;
 import static com.rn5.lists.Constants.toJson;
 import static com.rn5.lists.MainActivity.settings;
 
@@ -134,34 +135,28 @@ public class Lists extends AbstractList<Group> {
     public static Lists load() {
         Calendar today = Calendar.getInstance();
         LocalDate ld = LocalDate.of(today.get(Calendar.YEAR), today.get(Calendar.MONTH), today.get(Calendar.DAY_OF_MONTH));
+        Lists lists = new Lists();
         try {
-            Lists lists = loadFromFile(fileName, Lists.class);
+            lists = loadFromFile(fileName, Lists.class);
             if (lists == null)
                 lists = new Lists();
             else {
-                Log.d(TAG, "getGroups()");
                 for (Group g : lists.getGroups()) {
-                    Log.d(TAG, "sort()");
                     g.sort();
-                    Log.d(TAG, "getItems() " + g.getName());
                     ArrayList<Item> deleteItems = new ArrayList<>();
                     for (Item i : g.getItems()) {
-                        Log.d(TAG, "check completed() " + i.getTitle());
                         if (i.getCompleteDt() > 0) {
                             Calendar iCal = Calendar.getInstance();
                             iCal.setTimeInMillis(i.getCompleteDt());
                             LocalDate iLD = LocalDate.of(iCal.get(Calendar.YEAR), iCal.get(Calendar.MONTH), iCal.get(Calendar.DAY_OF_MONTH));
                             int d = (int) ChronoUnit.DAYS.between(iLD,ld);
                             if (d >= settings.getDeleteAfter()) {
-                                Log.d(TAG, "g.addDelete() " + i.getTitle());
                                 deleteItems.add(i);
                             }
                         }
-                        Log.d(TAG, "next Item");
                     }
                     if (deleteItems.size() > 0) {
                         for (Item i : deleteItems) {
-                            Log.d(TAG, "g.remove() " + i.getTitle());
                             g.remove(i);
                         }
                     }
@@ -170,6 +165,13 @@ public class Lists extends AbstractList<Group> {
             return lists;
         } catch (Exception e) {
             Log.e(TAG, "Lists.load() failed. Error: " + e.getMessage());
+            if (lists != null)
+                try {
+                    String fileName = "lists.json.error." + sdfError.format(new Date());
+                    saveToFile(fileName, toJson(lists));
+                } catch (IOException ioE) {
+                    Log.e(TAG, "Attempt to save loaded lists file failed. Error: " + ioE.getMessage());
+                }
             return new Lists();
         }
     }
